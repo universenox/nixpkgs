@@ -130,7 +130,7 @@ let
   "folders" or "devices". */
   (lib.pipe cleanedConfig [
     builtins.attrNames
-    (lib.subtractLists ["folders" "devices"])
+    (lib.subtractLists ["folders" "devices" "guiPasswordFile"])
     (map (subOption: ''
       curl -X PUT -d ${lib.escapeShellArg (builtins.toJSON cleanedConfig.${subOption})} ${curlAddressArgs "/rest/config/${subOption}"}
     ''))
@@ -141,7 +141,14 @@ let
        ${jq} -e .requiresRestart > /dev/null; then
         curl -X POST ${curlAddressArgs "/rest/system/restart"}
     fi
-  '');
+  ''
+  +
+  (lib.optionalString (cfg.guiPasswordFile != null) ''
+     pw_bcrypt=$(${pkgs.mkpasswd}/bin/mkpasswd -m bcrypt --stdin <"${cfg.guiPasswordFile}") \
+     curl -X PATCH --variable '%pw_bcrypt' --expand-json '{ "password": "{{pw_bcrypt}}" }' \
+     ${curlAddressArgs "/rest/config/gui"}
+  '')
+  );
 in {
   ###### interface
   options = {
@@ -167,7 +174,13 @@ in {
           [configDir](#opt-services.syncthing.configDir).
         '';
       };
-
+      guiPasswordFile = mkOption{
+        type = types.nullOr types.str;
+        default = null;
+        description = mdDoc ''
+          Path to file containing the plaintext password for Syncthing's gui.
+        '';
+      };
       overrideDevices = mkOption {
         type = types.bool;
         default = true;
@@ -612,7 +625,6 @@ in {
   ###### implementation
 
   config = mkIf cfg.enable {
-
     networking.firewall = mkIf cfg.openDefaultPorts {
       allowedTCPPorts = [ 22000 ];
       allowedUDPPorts = [ 21027 22000 ];
