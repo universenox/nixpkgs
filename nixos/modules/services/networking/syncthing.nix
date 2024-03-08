@@ -144,9 +144,8 @@ let
   ''
   +
   (lib.optionalString (cfg.guiPasswordFile != null) ''
-     pw_bcrypt=$(${pkgs.mkpasswd}/bin/mkpasswd -m bcrypt --stdin <"${cfg.guiPasswordFile}") \
-     curl -X PATCH --variable '%pw_bcrypt' --expand-json '{ "password": "{{pw_bcrypt}}" }' \
-     ${curlAddressArgs "/rest/config/gui"}
+     pw_bcrypt=$(${pkgs.mkpasswd}/bin/mkpasswd -m bcrypt --stdin <"${cfg.guiPasswordFile}")
+     curl -X PATCH --variable '%pw_bcrypt' --expand-json '{ "password": "{{pw_bcrypt}}" }' ${curlAddressArgs "/rest/config/gui"}
   '')
   );
 in {
@@ -178,7 +177,7 @@ in {
         type = types.nullOr types.str;
         default = null;
         description = mdDoc ''
-          Path to file containing the plaintext password for Syncthing's gui.
+          Path to file containing the plaintext password for Syncthing's GUI.
         '';
       };
       overrideDevices = mkOption {
@@ -625,6 +624,7 @@ in {
   ###### implementation
 
   config = mkIf cfg.enable {
+
     networking.firewall = mkIf cfg.openDefaultPorts {
       allowedTCPPorts = [ 22000 ];
       allowedUDPPorts = [ 21027 22000 ];
