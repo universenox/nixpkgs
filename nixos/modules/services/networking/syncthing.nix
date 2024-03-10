@@ -173,6 +173,7 @@ in {
           [configDir](#opt-services.syncthing.configDir).
         '';
       };
+
       guiPasswordFile = mkOption{
         type = types.nullOr types.str;
         default = null;
@@ -180,6 +181,7 @@ in {
           Path to file containing the plaintext password for Syncthing's GUI.
         '';
       };
+
       overrideDevices = mkOption {
         type = types.bool;
         default = true;
