@@ -144,8 +144,8 @@ let
   ''
   +
   (lib.optionalString (cfg.guiPasswordFile != null) ''
-     pw_bcrypt=$(${pkgs.mkpasswd}/bin/mkpasswd -m bcrypt --stdin <"${cfg.guiPasswordFile}")
-     curl -X PATCH --variable '%pw_bcrypt' --expand-json '{ "password": "{{pw_bcrypt}}" }' ${curlAddressArgs "/rest/config/gui"}
+     ${pkgs.mkpasswd}/bin/mkpasswd -m bcrypt --stdin <"${cfg.guiPasswordFile}" | tr -d "\n" >$RUNTIME_DIRECTORY/password_bcrypt
+     curl -X PATCH --variable "pw_bcrypt@$RUNTIME_DIRECTORY/password_bcrypt" --expand-json '{ "password": "{{pw_bcrypt}}" }' ${curlAddressArgs "/rest/config/gui"}
   '')
   );
 in {
