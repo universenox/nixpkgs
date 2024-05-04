@@ -61,7 +61,7 @@ let
         do sleep 1; done
         (printf "X-API-Key: "; cat "$RUNTIME_DIRECTORY/api_key") >"$RUNTIME_DIRECTORY/headers"
         ${pkgs.curl}/bin/curl -sSLk -H "@$RUNTIME_DIRECTORY/headers" \
-            --retry 1000 --retry-delay 1 --retry-all-errors \
+            --retry 1000 --retry-delay 1 --retry-all-errors --retry-max-time 10 \
             "$@"
     }
   '' +
@@ -104,7 +104,7 @@ let
         # only if s.override == true then we DELETE the relevant folders
         # afterwards.
         (map (new_cfg: ''
-          curl -d ${lib.escapeShellArg (builtins.toJSON new_cfg)} -X POST ${s.baseAddress}
+          curl -d ${lib.escapeShellArg (builtins.toJSON new_cfg)} -X POST ${s.baseAddress} || exit 1
         ''))
         (lib.concatStringsSep "\n")
       ]
@@ -119,7 +119,7 @@ let
           '[.[].${s.GET_IdAttrName}] - $new_ids | .[]'
         )"
         for id in ''${stale_${conf_type}_ids}; do
-          curl -X DELETE ${s.baseAddress}/$id
+          curl -X DELETE ${s.baseAddress}/$id || exit 1
         done
       ''
     ))
@@ -132,7 +132,7 @@ let
     builtins.attrNames
     (lib.subtractLists ["folders" "devices"])
     (map (subOption: ''
-      curl -X PUT -d ${lib.escapeShellArg (builtins.toJSON cleanedConfig.${subOption})} ${curlAddressArgs "/rest/config/${subOption}"}
+      curl -X PUT -d ${lib.escapeShellArg (builtins.toJSON cleanedConfig.${subOption})} ${curlAddressArgs "/rest/config/${subOption}"} || exit 1
     ''))
     (lib.concatStringsSep "\n")
   ]) + ''
