@@ -7,6 +7,7 @@
 , pcre
 , sqlite
 , nodejs
+, enableGui ? false
 }:
 
 python3.pkgs.buildPythonApplication rec {
@@ -35,7 +36,8 @@ python3.pkgs.buildPythonApplication rec {
 
   nativeBuildInputs = [ makeWrapper ];
   buildInputs = [ pcre sqlite ];
-  propagatedBuildInputs = with python3.pkgs; [ click flask kanjidraw ];
+  propagatedBuildInputs = with python3.pkgs; [ click flask kanjidraw ] ++ 
+                                              lib.lists.optional enableGui [ pywebview ];
   nativeCheckInputs = [ nodejs ];
 
   preBuild = ''
@@ -55,7 +57,9 @@ python3.pkgs.buildPythonApplication rec {
     make test
   '';
 
-  postInstall = ''
+  postInstall = 
+  lib.optionalString (!enableGui)
+  ''
     # requires pywebview
     rm $out/bin/jiten-gui
   '';
