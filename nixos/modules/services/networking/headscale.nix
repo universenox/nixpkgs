@@ -9,17 +9,17 @@
   dataDir = "/var/lib/headscale";
   runDir = "/run/headscale";
 
-  cliConfig = {
+  baseConfig = {
     # Turn off update checks since the origin of our package
     # is nixpkgs and not Github.
     disable_check_updates = true;
-
     unix_socket = "${runDir}/headscale.sock";
+    listen_addr = "${cfg.address}:${toString cfg.port}";
+    tls_letsencrypt_cache_dir = "${dataDir}/.cache";
   };
 
   settingsFormat = pkgs.formats.yaml {};
-  configFile = settingsFormat.generate "headscale.yaml" cfg.settings;
-  cliConfigFile = settingsFormat.generate "headscale.yaml" cliConfig;
+  configFile = settingsFormat.generate "headscale.yaml" (baseConfig // cfg.settings);
 
   assertRemovedOption = option: message: {
     assertion = !lib.hasAttrByPath option cfg;
@@ -515,20 +515,10 @@ in {
       (assertRemovedOption ["settings" "dns_config" "nameservers"] "Use `dns.nameservers.global` instead.")
     ];
 
-    services.headscale.settings = lib.mkMerge [
-      cliConfig
-      {
-        listen_addr = lib.mkDefault "${cfg.address}:${toString cfg.port}";
-
-        tls_letsencrypt_cache_dir = "${dataDir}/.cache";
-      }
-    ];
-
     environment = {
       # Headscale CLI needs a minimal config to be able to locate the unix socket
       # to talk to the server instance.
-      etc."headscale/config.yaml".source = cliConfigFile;
-
+      etc."headscale/config.yaml".source = configFile;
       systemPackages = [cfg.package];
     };
 
