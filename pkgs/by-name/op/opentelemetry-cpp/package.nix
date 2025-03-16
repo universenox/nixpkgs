@@ -9,9 +9,8 @@
 , prometheus-cpp
 , nlohmann_json
 , nix-update-script
-,
+, cxxStandard ? null
 }:
-
 let
   opentelemetry-proto = fetchFromGitHub {
     owner = "open-telemetry";
@@ -63,6 +62,9 @@ stdenv.mkDerivation (finalAttrs: {
     "-DWITH_ZIPKIN=ON"
     "-DWITH_BENCHMARK=OFF"
     "-DOTELCPP_PROTO_PATH=${opentelemetry-proto}"
+  ] ++ lib.optionals (cxxStandard != null) [
+    "-DCMAKE_CXX_STANDARD=${cxxStandard}"
+    "-DWITH_STL=CXX${cxxStandard}"
   ];
 
   outputs = [
