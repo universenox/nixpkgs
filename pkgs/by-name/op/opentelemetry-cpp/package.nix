@@ -1,15 +1,15 @@
-{
-  lib,
-  stdenv,
-  fetchFromGitHub,
-  cmake,
-  gtest,
-  protobuf,
-  curl,
-  grpc,
-  prometheus-cpp,
-  nlohmann_json,
-  nix-update-script,
+{ lib
+, stdenv
+, fetchFromGitHub
+, cmake
+, gtest
+, protobuf
+, curl
+, grpc
+, prometheus-cpp
+, nlohmann_json
+, nix-update-script
+,
 }:
 
 let
